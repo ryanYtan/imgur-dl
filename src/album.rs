@@ -1,14 +1,14 @@
 use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct Album {
+pub struct Album {
     data: Vec<Image>,
     success: bool,
     status: i32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct Image {
+pub struct Image {
     id: String,
     title: Option<String>,
     description: Option<String>,

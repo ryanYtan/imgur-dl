@@ -22,8 +22,6 @@ impl Handler for AlbumHandler {
     }
 }
 
-async fn do_it(
-    album_hash: &str,
-) -> Result<(), Box<dyn Error>> {
+async fn do_it(album_hash: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }

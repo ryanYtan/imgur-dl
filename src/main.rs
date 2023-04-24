@@ -1,6 +1,7 @@
-mod url_builder;
+mod utility;
 mod api;
 mod subhandlers;
+mod album;
 
 use std::error::Error;
 
