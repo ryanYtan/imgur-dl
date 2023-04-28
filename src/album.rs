@@ -2,45 +2,45 @@ use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Album {
-    data: Vec<Image>,
-    success: bool,
-    status: i32,
+    pub data: Vec<Image>,
+    pub success: bool,
+    pub status: i32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Image {
-    id: String,
-    title: Option<String>,
-    description: Option<String>,
-    datetime: u64,
+    pub id: String,
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub datetime: u64,
 
     #[serde(rename = "type")]
-    mime_type: String,
+    pub mime_type: String,
 
-    animated: bool,
-    width: u64,
-    height: u64,
-    size: u64,
-    views: u64,
-    bandwidth: u64,
-    vote: Option<String>,
-    favorite: bool,
-    nsfw: Option<bool>,
-    section: Option<String>,
-    account_url: Option<String>,
-    account_id: Option<i32>,
-    is_ad: bool,
-    in_most_viral: bool,
-    has_sound: bool,
-    tags: Vec<String>,
-    ad_type: i32,
-    ad_url: String,
+    pub animated: bool,
+    pub width: u64,
+    pub height: u64,
+    pub size: u64,
+    pub views: u64,
+    pub bandwidth: u64,
+    pub vote: Option<String>,
+    pub favorite: bool,
+    pub nsfw: Option<bool>,
+    pub section: Option<String>,
+    pub account_url: Option<String>,
+    pub account_id: Option<i32>,
+    pub is_ad: bool,
+    pub in_most_viral: bool,
+    pub has_sound: bool,
+    pub tags: Vec<String>,
+    pub ad_type: i32,
+    pub ad_url: String,
 
     #[serde(skip)]
-    edited: String,
+    pub edited: String,
 
-    in_gallery: bool,
-    link: String,
+    pub in_gallery: bool,
+    pub link: String,
 }
 
 #[cfg(test)]
