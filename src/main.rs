@@ -1,10 +1,9 @@
-mod utility;
 mod api;
-mod subhandlers;
 mod models;
-
+mod subhandlers;
+mod utility;
 use std::{error::Error, path::PathBuf};
-
+use std::io::Write;
 use structopt::StructOpt;
 use subhandlers::handler_traits::Handler;
 
@@ -33,9 +32,35 @@ pub enum Command {
 async fn main() -> Result<(), Box<dyn Error>> {
     let opt = Opt::from_args();
 
+    env_logger::Builder::new()
+        .format(|buf, record| {
+            let ts = buf.timestamp();
+            writeln!(
+                buf,
+                "{2} {1:<5} {0}",
+                record.args(),
+                record.level(),
+                ts,
+            )
+        })
+        .filter(None, match opt.verbose {
+            0 => log::LevelFilter::Error,
+            1 => log::LevelFilter::Warn,
+            2 => log::LevelFilter::Info,
+            3 => log::LevelFilter::Debug,
+            _ => log::LevelFilter::Trace,
+        })
+        .write_style(env_logger::WriteStyle::Always)
+        .init();
+
     let r = match &opt.cmd {
         Command::Album { .. } => subhandlers::album_handler::AlbumHandler::handle(&opt).await,
     };
+
+    match r {
+        Ok(_) => (),
+        Err(e) => log::error!("{}", e),
+    }
 
     Ok(())
 }

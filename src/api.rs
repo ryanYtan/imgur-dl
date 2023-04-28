@@ -70,7 +70,7 @@ impl ImgurApi {
             .subdir("album")
             .subdir(album_hash)
             .build();
-        let result = http_get(&self.client, &url).await?;
+        let result = self.get(&url).await?;
         Ok(serde_json::from_slice(&result).unwrap())
     }
 
@@ -81,7 +81,7 @@ impl ImgurApi {
             .subdir(album_hash)
             .subdir("images")
             .build();
-        let result = http_get(&self.client, &url).await?;
+        let result = self.get(&url).await?;
         Ok(serde_json::from_slice(&result).unwrap())
     }
 }

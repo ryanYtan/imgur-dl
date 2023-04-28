@@ -1,6 +1,6 @@
 use std::{error::Error, path::{PathBuf, Path}, io::Write};
 use async_trait::async_trait;
-use crate::{api::ImgurApi, models::album::{ResponseBody, Album, Image}};
+use crate::{api::ImgurApi, models::album::{ResponseBody, Album, Image}, utility::mime2ext};
 use super::handler_traits::Handler;
 
 pub struct AlbumHandler;
@@ -48,6 +48,7 @@ async fn do_it(
     };
 
     //create output album folder
+    log::info!("Creating output folder at \"{}\"", &outdir.to_str().unwrap());
     let folder_name = get_output_album_folder_name(&album);
     let folder_path = outdir.join(folder_name);
     match std::fs::create_dir_all(&folder_path) {
@@ -56,13 +57,20 @@ async fn do_it(
     }
 
     for (i, image) in album.data.images.iter().enumerate() {
+        log::info!("Downloading {}", &image.link);
         let bin_data = match api.get(&image.link).await {
             Ok(v) => v,
             Err(e) => return Err(Box::new(e)), // TODO
         };
 
         let image_filename = get_output_filename(&image, i as u64);
-        let image_path = folder_path.join(&image_filename);
+        let image_extension = mime2ext::mime2ext(&image.mime_type);
+        let image_path = folder_path
+            .join(&image_filename)
+            .with_extension(&image_extension);
+
+        log::info!("Saving to \"{}\"...", &image_path.to_str().unwrap());
+
         let mut file = match std::fs::File::create(&image_path) {
             Ok(v) => v,
             Err(e) => return Err(Box::new(e)) //TODO

@@ -7,7 +7,9 @@ edition = "2021"
 
 [dependencies]
 async-trait = "0.1.68"
+env_logger = "0.10.0"
 futures = "0.3.28"
+log = "0.4.17"
 openssl = { version = "0.10", features = ["vendored"] }
 reqwest = "0.11.16"
 serde = { version = "1.0.160", features = ["derive"] }
