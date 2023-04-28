@@ -1,10 +1,41 @@
 use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Album {
-    pub data: Vec<Image>,
+pub struct ResponseBody<T> {
+    pub data: T,
     pub success: bool,
     pub status: i32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Album {
+    pub id: String,
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub datetime: u64,
+    pub cover: String,
+    pub cover_edited: Option<String>,
+    pub cover_width: u64,
+    pub cover_height: u64,
+    pub account_url: Option<String>,
+    pub account_id: Option<u64>,
+    pub privacy: String,
+    pub layout: String,
+    pub views: u64,
+    pub link: String,
+    pub favorite: bool,
+    pub nsfw: bool,
+    pub section: Option<String>,
+    pub images_count: u64,
+    pub in_gallery: bool,
+    pub is_ad: bool,
+    pub include_album_ads: bool,
+    pub is_album: bool,
+    pub images: Vec<Image>,
+
+    //kinda useless
+    #[serde(skip)]
+    pub ad_config: serde_json::Value,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
