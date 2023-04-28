@@ -1,7 +1,7 @@
 mod api;
-mod models;
 mod subhandlers;
 mod utility;
+mod models;
 use std::{error::Error, path::PathBuf};
 use std::io::Write;
 use structopt::StructOpt;

@@ -1,6 +1,6 @@
 use std::{error::Error, path::{PathBuf, Path}, io::Write};
 use async_trait::async_trait;
-use crate::{api::ImgurApi, models::album::{ResponseBody, Album, Image}, utility::mime2ext};
+use crate::{api::ImgurApi, utility::mime2ext, models::{Image, ResponseBody, Album}};
 use super::handler_traits::Handler;
 
 pub struct AlbumHandler;

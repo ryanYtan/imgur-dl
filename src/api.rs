@@ -1,8 +1,8 @@
 use reqwest::{Client, StatusCode};
-use snafu::{Whatever, whatever, Snafu};
+use snafu::{Snafu};
 use tokio_retry::{strategy::{jitter, ExponentialBackoff}, Retry};
 
-use crate::{utility::url_builder::UrlBuilder, models::album::{ResponseBody, Album, Image}};
+use crate::{utility::url_builder::UrlBuilder, models::{ResponseBody, Album, Image}};
 
 #[derive(Debug, Snafu)]
 pub enum ClientError {
