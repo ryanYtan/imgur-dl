@@ -19,7 +19,7 @@ pub struct Opt {
 
 #[derive(Debug, StructOpt)]
 pub enum Command {
-    #[structopt(about = "Album")]
+    #[structopt(about = "album")]
     Album {
         album_hash: String,
 

@@ -1,1 +1,3 @@
-A CLI image downloader for imgur, built in Rust.
+# imgur-dl
+
+A CLI tool for [https://imgur.com/](https://imgur.com/), built in Rust.
