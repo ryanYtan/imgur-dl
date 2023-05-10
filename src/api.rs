@@ -1,3 +1,5 @@
+#![allow(dead_code, unused)]
+
 use reqwest::{Client, StatusCode, header::{HeaderValue, HeaderMap}};
 use tokio_retry::{strategy::{jitter, ExponentialBackoff}, Retry};
 use lazy_static::lazy_static;
