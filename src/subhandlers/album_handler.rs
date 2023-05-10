@@ -34,6 +34,8 @@ async fn do_it(
     let api = ImgurApi::new();
     let result = api.album(&album_hash).await;
 
+    log::info!("Processing album {}", &album_hash);
+
     let album = match result {
         Ok(v) => v,
         Err(e) => return Err(Box::new(e)),
@@ -49,7 +51,8 @@ async fn do_it(
     //create output album folder
     log::info!("Creating output folder at \"{}\"", &outdir.to_str().unwrap());
     let folder_name = get_output_album_folder_name(&album);
-    let folder_path = outdir.join(folder_name);
+    let folder_path = outdir.join(&folder_name);
+    log::info!("Outputting images to \"{}\"", &folder_name);
     match std::fs::create_dir_all(&folder_path) {
         Ok(_) => (),
         Err(e) => return Err(Box::new(e)), //TODO
@@ -67,8 +70,6 @@ async fn do_it(
         let image_path = folder_path
             .join(&image_filename)
             .with_extension(&image_extension);
-
-        log::info!("Saving to \"{}\"...", &image_path.to_str().unwrap());
 
         let mut file = match std::fs::File::create(&image_path) {
             Ok(v) => v,
