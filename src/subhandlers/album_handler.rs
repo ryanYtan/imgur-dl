@@ -12,9 +12,6 @@ impl Handler for AlbumHandler {
             crate::Command::Album { album_hash, output_directory } => {
                 do_it(&album_hash, output_directory).await
             },
-            _ => {
-                panic!("reached unexpected arm");
-            }
         }
     }
 }
