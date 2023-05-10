@@ -461,6 +461,8 @@ dependencies = [
  "async-trait",
  "env_logger",
  "futures",
+ "http",
+ "lazy_static",
  "log",
  "openssl",
  "reqwest",

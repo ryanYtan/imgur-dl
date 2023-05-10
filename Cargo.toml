@@ -9,6 +9,8 @@ edition = "2021"
 async-trait = "0.1.68"
 env_logger = "0.10.0"
 futures = "0.3.28"
+http = "0.2.9"
+lazy_static = "1.4.0"
 log = "0.4.17"
 openssl = { version = "0.10", features = ["vendored"] }
 reqwest = "0.11.16"

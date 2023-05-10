@@ -1,31 +1,38 @@
-use reqwest::{Client, StatusCode};
+use reqwest::{Client, StatusCode, header::{HeaderValue, HeaderMap}};
 use snafu::{Snafu};
 use tokio_retry::{strategy::{jitter, ExponentialBackoff}, Retry};
-
+use lazy_static::lazy_static;
 use crate::{utility::url_builder::UrlBuilder, models::{ResponseBody, Album, Image}};
+
+lazy_static! {
+    static ref IMGUR_AUTHORIZATION_HEADER: HeaderMap = (|| {
+        let mut headers = HeaderMap::new();
+        headers.append(http::header::AUTHORIZATION, HeaderValue::from_str("Client-ID ed3b9947e97336f").unwrap());
+        headers
+    })();
+}
 
 #[derive(Debug, Snafu)]
 pub enum ClientError {
     DoesNotExist,
-    FailedRequest,
+    FailedRequest { msg: String },
 }
 
 fn build_http_client() -> reqwest::Client {
-    let mut headers = reqwest::header::HeaderMap::new();
-    headers.insert(
-        "Authorization",
-        reqwest::header::HeaderValue::from_str("Client-ID ed3b9947e97336f").unwrap()
-    );
     reqwest::Client::builder()
-        .default_headers(headers)
         .build()
         .unwrap()
 }
 
-async fn http_get(client: &Client, url: &str) -> Result<Vec<u8>, ClientError> {
+async fn http_get(client: &Client, url: &str, headers: &HeaderMap) -> Result<Vec<u8>, ClientError> {
     let http_get_impl = || async {
-        let request = client.get(url);
-        let response = request.send().await.unwrap(); //assume it passes
+        let request = client
+            .get(url);
+        let response = request
+            .headers(headers.clone())
+            .send()
+            .await
+            .unwrap(); //assume it passes
 
         match response.status() {
             StatusCode::OK => {
@@ -35,7 +42,9 @@ async fn http_get(client: &Client, url: &str) -> Result<Vec<u8>, ClientError> {
                 Err(ClientError::DoesNotExist)
             },
             _ => {
-                panic!("unexpected status code {} for url={}", &response.status(), &url)
+                Err(ClientError::FailedRequest {
+                    msg: format!("unexpected status code {} for url={}", &response.status(), &url),
+                })
             }
         }
     };
@@ -61,7 +70,12 @@ impl ImgurApi {
     }
 
     pub async fn get(&self, url: &str) -> Result<Vec<u8>, ClientError> {
-        http_get(&self.client, &url).await
+        let headers = HeaderMap::new();
+        http_get(&self.client, &url, &headers).await
+    }
+
+    pub async fn get_header(&self, url: &str, headers: &HeaderMap) -> Result<Vec<u8>, ClientError> {
+        http_get(&self.client, &url, &headers).await
     }
 
     // https://api.imgur.com/3/album/{{album_hash}}
@@ -70,7 +84,7 @@ impl ImgurApi {
             .subdir("album")
             .subdir(album_hash)
             .build();
-        let result = self.get(&url).await?;
+        let result = self.get_header(&url, &IMGUR_AUTHORIZATION_HEADER).await?;
         Ok(serde_json::from_slice(&result).unwrap())
     }
 
@@ -81,7 +95,7 @@ impl ImgurApi {
             .subdir(album_hash)
             .subdir("images")
             .build();
-        let result = self.get(&url).await?;
+        let result = self.get_header(&url, &IMGUR_AUTHORIZATION_HEADER).await?;
         Ok(serde_json::from_slice(&result).unwrap())
     }
 }
