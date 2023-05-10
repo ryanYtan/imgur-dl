@@ -1,8 +1,8 @@
 use reqwest::{Client, StatusCode, header::{HeaderValue, HeaderMap}};
-use snafu::{Snafu};
 use tokio_retry::{strategy::{jitter, ExponentialBackoff}, Retry};
 use lazy_static::lazy_static;
 use crate::{utility::url_builder::UrlBuilder, models::{ResponseBody, Album, Image}};
+use anyhow::{Result, anyhow};
 
 lazy_static! {
     static ref IMGUR_AUTHORIZATION_HEADER: HeaderMap = (|| {
@@ -12,19 +12,13 @@ lazy_static! {
     })();
 }
 
-#[derive(Debug, Snafu)]
-pub enum ClientError {
-    DoesNotExist,
-    FailedRequest { msg: String },
-}
-
 fn build_http_client() -> reqwest::Client {
     reqwest::Client::builder()
         .build()
         .unwrap()
 }
 
-async fn http_get(client: &Client, url: &str, headers: &HeaderMap) -> Result<Vec<u8>, ClientError> {
+async fn http_get(client: &Client, url: &str, headers: &HeaderMap) -> Result<Vec<u8>> {
     let http_get_impl = || async {
         let request = client
             .get(url);
@@ -35,17 +29,9 @@ async fn http_get(client: &Client, url: &str, headers: &HeaderMap) -> Result<Vec
             .unwrap(); //assume it passes
 
         match response.status() {
-            StatusCode::OK => {
-                Ok(response.bytes().await.unwrap().to_vec())
-            },
-            StatusCode::NOT_FOUND => {
-                Err(ClientError::DoesNotExist)
-            },
-            _ => {
-                Err(ClientError::FailedRequest {
-                    msg: format!("unexpected status code {} for url={}", &response.status(), &url),
-                })
-            }
+            StatusCode::OK => Ok(response.bytes().await.unwrap().to_vec()),
+            StatusCode::NOT_FOUND => Err(anyhow!("received code=404 for url={}", &url)),
+            _ => Err(anyhow!("unexpected code={} for url={}", &response.status(), &url)),
         }
     };
 
@@ -69,17 +55,17 @@ impl ImgurApi {
         }
     }
 
-    pub async fn get(&self, url: &str) -> Result<Vec<u8>, ClientError> {
+    pub async fn get(&self, url: &str) -> Result<Vec<u8>> {
         let headers = HeaderMap::new();
         http_get(&self.client, &url, &headers).await
     }
 
-    pub async fn get_header(&self, url: &str, headers: &HeaderMap) -> Result<Vec<u8>, ClientError> {
+    pub async fn get_header(&self, url: &str, headers: &HeaderMap) -> Result<Vec<u8>> {
         http_get(&self.client, &url, &headers).await
     }
 
     // https://api.imgur.com/3/album/{{album_hash}}
-    pub async fn album(&self, album_hash: &str) -> Result<ResponseBody<Album>, ClientError> {
+    pub async fn album(&self, album_hash: &str) -> Result<ResponseBody<Album>> {
         let url = UrlBuilder::with_url(&self.base_url)
             .subdir("album")
             .subdir(album_hash)
@@ -89,7 +75,7 @@ impl ImgurApi {
     }
 
     // https://api.imgur.com/3/album/{{album_hash}}/images
-    pub async fn album_images(&self, album_hash: &str) -> Result<ResponseBody<Vec<Image>>, ClientError> {
+    pub async fn album_images(&self, album_hash: &str) -> Result<ResponseBody<Vec<Image>>> {
         let url = UrlBuilder::with_url(&self.base_url)
             .subdir("album")
             .subdir(album_hash)

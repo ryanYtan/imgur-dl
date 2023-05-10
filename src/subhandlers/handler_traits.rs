@@ -1,10 +1,9 @@
-use std::error::Error;
-
 use async_trait::async_trait;
-
 use crate::Opt;
+
+use anyhow::Result;
 
 #[async_trait]
 pub trait Handler {
-    async fn handle(options: &Opt) -> Result<(), Box<dyn Error>>;
+    async fn handle(options: &Opt) -> Result<()>;
 }
