@@ -42,6 +42,8 @@ async fn do_it(
         Err(e) => return Err(Box::new(e)),
     };
 
+    log::debug!("Retrieved album object\n{:?}", &album);
+
     let outdir = match output_directory {
         Some(v) => v.clone(),
         None => Path::new("./").to_path_buf(),
