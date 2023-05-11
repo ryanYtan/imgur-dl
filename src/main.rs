@@ -7,7 +7,7 @@ use std::io::Write;
 use structopt::StructOpt;
 use subhandlers::handler_traits::Handler;
 
-#[derive(Debug, StructOpt)]
+#[derive(StructOpt)]
 #[structopt(name = "imgur-dl")]
 pub struct Opt {
     #[structopt(short, long, parse(from_occurrences))]
@@ -17,7 +17,7 @@ pub struct Opt {
     cmd: Command,
 }
 
-#[derive(Debug, StructOpt)]
+#[derive(StructOpt)]
 pub enum Command {
     #[structopt(about = "album")]
     Album {
@@ -25,6 +25,9 @@ pub enum Command {
 
         #[structopt(short = "-o", long, parse(from_os_str))]
         output_directory: Option<PathBuf>,
+
+        #[structopt(short = "-t", long, default_value = "%(title) [%(id)]")]
+        output_template: String,
     }
 }
 

@@ -1,7 +1,7 @@
 use std::{path::{PathBuf, Path}, io::Write, sync::Arc};
 use async_trait::async_trait;
 use tokio::task::JoinHandle;
-use crate::{api::ImgurApi, utility::mime2ext, models::{Image, ResponseBody, Album}};
+use crate::{api::ImgurApi, utility::{mime2ext, template::{Templater, Formatter}}, models::{Image, Album}};
 use super::handler_traits::Handler;
 use anyhow::{Result};
 
@@ -11,29 +11,26 @@ pub struct AlbumHandler;
 impl Handler for AlbumHandler {
     async fn handle(options: &crate::Opt) -> Result<()> {
         match &options.cmd {
-            crate::Command::Album { album_hash, output_directory } => {
-                do_it(&album_hash, output_directory).await
+            crate::Command::Album { album_hash, output_directory, output_template } => {
+                do_it(&album_hash, output_directory, output_template).await
             },
         }
     }
-}
-
-fn get_output_album_folder_name(album: &ResponseBody<Album>) -> String {
-    match &album.data.title {
-        Some(v) => v,
-        None => &album.data.id,
-    }.clone()
 }
 
 fn get_output_filename(image: &Image, counter: u64) -> String {
     return format!("{:04}-{}", counter, &image.id)
 }
 
-async fn do_it(album_hash: &str, output_directory: &Option<PathBuf>) -> Result<()> {
+async fn do_it(album_hash: &str, output_directory: &Option<PathBuf>, output_template: &str) -> Result<()> {
     log::info!("Processing album {}", &album_hash);
 
     let api = Arc::new(ImgurApi::new());
     let album = api.album(&album_hash).await?;
+
+    let formatter = Formatter::build(output_template)?;
+    let templater = Templater::<Album>::default();
+
 
     log::debug!("Retrieved album object\n{:?}", &album);
 
@@ -44,7 +41,7 @@ async fn do_it(album_hash: &str, output_directory: &Option<PathBuf>) -> Result<(
 
     //create output album folder
     log::info!("Creating output folder at \"{}\"", &outdir.to_str().unwrap());
-    let folder_name = get_output_album_folder_name(&album);
+    let folder_name = templater.render(&album.data, &formatter)?;
     let folder_path = Arc::new(outdir.join(&folder_name));
     log::info!("Outputting images to \"{}\"", &folder_name);
     std::fs::create_dir_all(folder_path.as_ref())?;
