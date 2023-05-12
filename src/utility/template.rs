@@ -1,8 +1,6 @@
-use std::{collections::HashMap};
+use std::collections::HashMap;
 use std::marker::PhantomData;
 use anyhow::{Result, anyhow};
-
-use crate::models::Album;
 
 #[derive(Debug, Clone)]
 enum TemplateElement {
