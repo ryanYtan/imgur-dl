@@ -3,7 +3,21 @@ use async_trait::async_trait;
 use tokio::task::JoinHandle;
 use crate::{api::ImgurApi, utility::{mime2ext, template::{Templater, Formatter}}, models::{Image, Album}};
 use super::handler_traits::Handler;
-use anyhow::{Result};
+use anyhow::Result;
+
+impl Default for Templater<Album> {
+    fn default() -> Self {
+        let mut ret = Self::new();
+        ret.add_selector("id", |album| Some(album.id.to_owned()));
+        ret.add_selector("title", |album| album.title.to_owned());
+        ret.add_selector("description", |album| album.description.clone());
+        ret.add_selector("datetime", |album| Some(album.datetime.to_string()));
+        ret.add_selector("num_imgs", |album| Some(album.images_count.to_string()));
+        ret.add_selector("num_views", |album| Some(album.views.to_string()));
+        ret.add_selector("section", |album| album.section.clone());
+        ret
+    }
+}
 
 pub struct AlbumHandler;
 

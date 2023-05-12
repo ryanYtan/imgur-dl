@@ -68,16 +68,7 @@ impl Formatter {
 
 pub struct Templater<T> {
     _pd: PhantomData<T>,
-    mapping: HashMap<String, Box<dyn (Fn(&T) -> Option<String>) + Send + Sync>>
-}
-
-impl Default for Templater<Album> {
-    fn default() -> Self {
-        let mut ret = Self { _pd: PhantomData, mapping: HashMap::new() };
-        ret.add_selector("id", |album| Some(album.id.to_owned()));
-        ret.add_selector("title", |album| album.title.to_owned());
-        ret
-    }
+    mapping: HashMap<String, Box<dyn Fn(&T) -> Option<String> + 'static + Send + Sync>>
 }
 
 impl<T> Templater<T> {
