@@ -1,22 +1,21 @@
 use std::{path::{PathBuf, Path}, io::Write, sync::Arc};
 use async_trait::async_trait;
+use struct_string_template::{Templater, TemplaterBuilder, Formatter};
 use tokio::task::JoinHandle;
-use crate::{api::ImgurApi, utility::{mime2ext, template::{Templater, Formatter}}, models::{Image, Album}};
+use crate::{api::ImgurApi, utility::mime2ext, models::{Image, Album}};
 use super::handler_traits::Handler;
 use anyhow::Result;
 
-impl Default for Templater<Album> {
-    fn default() -> Self {
-        let mut ret = Self::new();
-        ret.add_selector("id", |album| Some(album.id.to_owned()));
-        ret.add_selector("title", |album| album.title.to_owned());
-        ret.add_selector("description", |album| album.description.clone());
-        ret.add_selector("datetime", |album| Some(album.datetime.to_string()));
-        ret.add_selector("num_imgs", |album| Some(album.images_count.to_string()));
-        ret.add_selector("num_views", |album| Some(album.views.to_string()));
-        ret.add_selector("section", |album| album.section.clone());
-        ret
-    }
+fn create_template() -> Templater<Album> {
+    TemplaterBuilder::<Album>::new()
+        .with_selector("id", |album| Some(album.id.to_owned()))
+        .with_selector("title", |album| album.title.to_owned())
+        .with_selector("description", |album| album.description.clone())
+        .with_selector("datetime", |album| Some(album.datetime.to_string()))
+        .with_selector("num_imgs", |album| Some(album.images_count.to_string()))
+        .with_selector("num_views", |album| Some(album.views.to_string()))
+        .with_selector("section", |album| album.section.clone())
+        .build()
 }
 
 pub struct AlbumHandler;
@@ -43,7 +42,7 @@ async fn do_it(album_hash: &str, output_directory: &Option<PathBuf>, output_temp
     let album = api.album(&album_hash).await?;
 
     let formatter = Formatter::build(output_template)?;
-    let templater = Templater::<Album>::default();
+    let templater = create_template();
 
 
     log::debug!("Retrieved album object\n{:?}", &album);
@@ -55,7 +54,7 @@ async fn do_it(album_hash: &str, output_directory: &Option<PathBuf>, output_temp
 
     //create output album folder
     log::info!("Creating output folder at \"{}\"", &outdir.to_str().unwrap());
-    let folder_name = templater.render(&album.data, &formatter)?;
+    let folder_name = templater.renderf(&album.data, &formatter)?;
     let folder_path = Arc::new(outdir.join(&folder_name));
     log::info!("Outputting images to \"{}\"", &folder_name);
     std::fs::create_dir_all(folder_path.as_ref())?;

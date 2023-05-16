@@ -17,6 +17,7 @@ openssl = { version = "0.10", features = ["vendored"] }
 reqwest = "0.11.16"
 serde = { version = "1.0.160", features = ["derive"] }
 serde_json = "1.0.96"
+struct-string-template = "0.1.0"
 structopt = "0.3.26"
 tokio = { version = "1.27.0", features = ["full", "time"] }
 tokio-retry = "0.3.0"
