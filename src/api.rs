@@ -1,10 +1,19 @@
 #![allow(dead_code, unused)]
 
 use reqwest::{Client, StatusCode, header::{HeaderValue, HeaderMap}};
+use thiserror::Error;
 use tokio_retry::{strategy::{jitter, ExponentialBackoff}, Retry};
 use lazy_static::lazy_static;
 use crate::{utility::url_builder::UrlBuilder, models::{ResponseBody, Album, Image}};
 use anyhow::{Result, anyhow};
+
+#[derive(Debug, Error)]
+pub enum ApiError {
+    #[error("")]
+    NotFound,
+    #[error("")]
+    FailedRequest,
+}
 
 lazy_static! {
     static ref IMGUR_AUTHORIZATION_HEADER: HeaderMap = (|| {
@@ -53,7 +62,7 @@ impl ImgurApi {
     pub fn new() -> Self {
         ImgurApi {
             client: build_http_client(),
-            base_url: "https://api.imgur.com/3".to_owned()
+            base_url: "api.imgur.com/3".to_owned()
         }
     }
 

@@ -19,5 +19,6 @@ serde = { version = "1.0.160", features = ["derive"] }
 serde_json = "1.0.96"
 struct-string-template = "0.1.0"
 structopt = "0.3.26"
+thiserror = "1.0.40"
 tokio = { version = "1.27.0", features = ["full", "time"] }
 tokio-retry = "0.3.0"

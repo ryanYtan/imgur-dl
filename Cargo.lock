@@ -465,6 +465,7 @@ dependencies = [
  "serde_json",
  "struct-string-template",
  "structopt",
+ "thiserror",
  "tokio",
  "tokio-retry",
 ]

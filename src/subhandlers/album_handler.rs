@@ -24,8 +24,8 @@ pub struct AlbumHandler;
 impl Handler for AlbumHandler {
     async fn handle(options: &crate::Opt) -> Result<()> {
         match &options.cmd {
-            crate::Command::Album { album_hash, output_directory, output_template } => {
-                do_it(&album_hash, output_directory, output_template).await
+            crate::Command::Album { album_hashes, output_directory, output_template } => {
+                do_it(&album_hashes, output_directory, output_template).await
             },
         }
     }
@@ -35,54 +35,53 @@ fn get_output_filename(image: &Image, counter: u64) -> String {
     return format!("{:04}-{}", counter, &image.id)
 }
 
-async fn do_it(album_hash: &str, output_directory: &Option<PathBuf>, output_template: &str) -> Result<()> {
-    log::info!("Processing album {}", &album_hash);
-
+async fn do_it(
+        album_hashes: &[String],
+        output_directory: &Option<PathBuf>,
+        output_template: &str
+) -> Result<()> {
     let api = Arc::new(ImgurApi::new());
-    let album = api.album(&album_hash).await?;
-
     let formatter = Formatter::build(output_template)?;
     let templater = create_template();
-
-
-    log::debug!("Retrieved album object\n{:?}", &album);
-
     let outdir = output_directory
         .clone()
         .or(Some(Path::new("./").to_path_buf()))
         .unwrap();
+    for hash in album_hashes {
+        log::info!("Processing album {}", &hash);
+        let album = api.album(&hash).await?;
+        log::debug!("Retrieved album object\n{:?}", &album);
 
-    //create output album folder
-    log::info!("Creating output folder at \"{}\"", &outdir.to_str().unwrap());
-    let folder_name = templater.renderf(&album.data, &formatter)?;
-    let folder_path = Arc::new(outdir.join(&folder_name));
-    log::info!("Outputting images to \"{}\"", &folder_name);
-    std::fs::create_dir_all(folder_path.as_ref())?;
+        //create output album folder
+        log::info!("Creating output folder at \"{}\"", &outdir.to_str().unwrap());
+        let folder_name = templater.renderf(&album.data, &formatter)?;
+        let folder_path = Arc::new(outdir.join(&folder_name));
+        log::info!("Outputting images to \"{}\"", &folder_name);
+        std::fs::create_dir_all(folder_path.as_ref())?;
 
-    let tasks: Vec<JoinHandle<Result<()>>> = album
-        .data
-        .images
-        .into_iter()
-        .enumerate()
-        .map(|(i, image)| -> JoinHandle<Result<()>> {
-            let api = api.clone();
-            let folder_path = folder_path.clone();
-            tokio::spawn(async move {
-                log::info!("Downloading {}", &image.link);
-                let bin_data = api.get(&image.link).await?;
-                let image_filename = get_output_filename(&image, i as u64);
-                let image_extension = mime2ext::mime2ext(&image.mime_type);
-                let image_path = folder_path
-                    .join(&image_filename)
-                    .with_extension(&image_extension);
-                let mut file = std::fs::File::create(&image_path)?;
-                file.write_all(&bin_data)?;
-                Ok(())
+        let tasks: Vec<JoinHandle<Result<()>>> = album
+            .data
+            .images
+            .into_iter()
+            .enumerate()
+            .map(|(i, image)| -> JoinHandle<Result<()>> {
+                let api = api.clone();
+                let folder_path = folder_path.clone();
+                tokio::spawn(async move {
+                    log::info!("Downloading {}", &image.link);
+                    let bin_data = api.get(&image.link).await?;
+                    let image_filename = get_output_filename(&image, i as u64);
+                    let image_extension = mime2ext::mime2ext(&image.mime_type);
+                    let image_path = folder_path
+                        .join(&image_filename)
+                        .with_extension(&image_extension);
+                    let mut file = std::fs::File::create(&image_path)?;
+                    file.write_all(&bin_data)?;
+                    Ok(())
+                })
             })
-        })
-        .collect();
-
-    futures::future::join_all(tasks).await;
-
+            .collect();
+        futures::future::join_all(tasks).await;
+    }
     Ok(())
 }

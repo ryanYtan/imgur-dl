@@ -21,12 +21,11 @@ pub struct Opt {
 pub enum Command {
     #[structopt(about = "album")]
     Album {
-        album_hash: String,
-
+        #[structopt(required = true, min_values = 1)]
+        album_hashes: Vec<String>,
         #[structopt(short = "-o", long, parse(from_os_str))]
         output_directory: Option<PathBuf>,
-
-        #[structopt(short = "-t", long, default_value = "%(title) [%(id)]")]
+        #[structopt(short = "-t", long, default_value = "[%(id)] %(title)")]
         output_template: String,
     }
 }
