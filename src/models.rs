@@ -80,7 +80,7 @@ mod tests {
 
     use super::Album;
 
-    #[test]
+    #[allow(dead_code)]
     fn test_deserialization() {
         let paths = vec![
             "data/example_album.json",

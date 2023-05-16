@@ -68,7 +68,8 @@ impl ImgurApi {
 
     // https://api.imgur.com/3/album/{{album_hash}}
     pub async fn album(&self, album_hash: &str) -> Result<ResponseBody<Album>> {
-        let url = UrlBuilder::with_url(&self.base_url)
+        let url = UrlBuilder::new()
+            .host(&self.base_url)
             .subdir("album")
             .subdir(album_hash)
             .build();
@@ -78,7 +79,8 @@ impl ImgurApi {
 
     // https://api.imgur.com/3/album/{{album_hash}}/images
     pub async fn album_images(&self, album_hash: &str) -> Result<ResponseBody<Vec<Image>>> {
-        let url = UrlBuilder::with_url(&self.base_url)
+        let url = UrlBuilder::new()
+            .host(&self.base_url)
             .subdir("album")
             .subdir(album_hash)
             .subdir("images")
