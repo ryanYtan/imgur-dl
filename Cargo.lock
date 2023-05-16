@@ -468,6 +468,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "tokio-retry",
+ "url-constructor",
 ]
 
 [[package]]
@@ -1302,6 +1303,12 @@ dependencies = [
  "idna",
  "percent-encoding",
 ]
+
+[[package]]
+name = "url-constructor"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "76ebdb602caa7eec1e27aaf8364e23c9807d0deb2aae98c6e0fa37ea05954d6d"
 
 [[package]]
 name = "vcpkg"

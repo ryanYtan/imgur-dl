@@ -4,7 +4,8 @@ use reqwest::{Client, StatusCode, header::{HeaderValue, HeaderMap}};
 use thiserror::Error;
 use tokio_retry::{strategy::{jitter, ExponentialBackoff}, Retry};
 use lazy_static::lazy_static;
-use crate::{utility::url_builder::UrlBuilder, models::{ResponseBody, Album, Image}};
+use url_constructor::UrlConstructor;
+use crate::{models::{ResponseBody, Album, Image}};
 use anyhow::{Result, anyhow};
 
 #[derive(Debug, Error)]
@@ -77,7 +78,8 @@ impl ImgurApi {
 
     // https://api.imgur.com/3/album/{{album_hash}}
     pub async fn album(&self, album_hash: &str) -> Result<ResponseBody<Album>> {
-        let url = UrlBuilder::new()
+        let url = UrlConstructor::new()
+            .scheme("https")
             .host(&self.base_url)
             .subdir("album")
             .subdir(album_hash)
@@ -88,7 +90,7 @@ impl ImgurApi {
 
     // https://api.imgur.com/3/album/{{album_hash}}/images
     pub async fn album_images(&self, album_hash: &str) -> Result<ResponseBody<Vec<Image>>> {
-        let url = UrlBuilder::new()
+        let url = UrlConstructor::new()
             .host(&self.base_url)
             .subdir("album")
             .subdir(album_hash)
