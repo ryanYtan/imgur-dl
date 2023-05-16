@@ -1,8 +1,9 @@
 use std::collections::BTreeMap;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct UrlBuilder {
     scheme: String,
+    subdomains: Vec<String>,
     host: String,
     port: Option<u16>,
     subdirs: Vec<String>,
@@ -13,6 +14,7 @@ impl UrlBuilder {
     pub fn new() -> Self {
         Self {
             scheme: "https".to_owned(),
+            subdomains: Vec::new(),
             host: String::new(),
             port: None,
             subdirs: Vec::new(),
@@ -35,6 +37,13 @@ impl UrlBuilder {
             self.host.pop();
         }
         self.host = host_s;
+        self
+    }
+
+    pub fn append_subdomain<S>(&mut self, subdomain: S) -> &mut Self
+        where S: Into<String>
+    {
+        self.subdomains.push(subdomain.into());
         self
     }
 
@@ -65,8 +74,17 @@ impl UrlBuilder {
     }
 
     pub fn build(&self) -> String {
+        let subdomains_s = self
+            .subdomains
+            .iter()
+            .cloned()
+            .reduce(|a, b| a + "." + &b)
+            .map(|s| s + ".")
+            .or(Some("".to_owned()))
+            .unwrap();
+
         let port_s = match self.port {
-            Some(num) => format!(":{}", num),
+            Some(num) => ":".to_owned() + &num.to_string(),
             None => "".to_owned(),
         };
 
@@ -74,8 +92,8 @@ impl UrlBuilder {
             .subdirs
             .iter()
             .cloned()
-            .reduce(|a, b| format!("{}/{}", a, b))
-            .map(|s| format!("/{}", s))
+            .reduce(|a, b| a + "/" + &b)
+            .map(|s| "/".to_owned() + &s)
             .or(Some("".to_owned()))
             .unwrap();
 
@@ -83,13 +101,19 @@ impl UrlBuilder {
             .params
             .clone()
             .into_iter()
-            .map(|(k, v)| format!("{}={}", k, v))
-            .reduce(|s, t| format!("{}&{}", s, t))
-            .map(|s| format!("?{}", s))
+            .map(|(k, v)| k + "=" + &v)
+            .reduce(|p1, p2| p1 + "&" + &p2)
+            .map(|s| "?".to_owned() + &s)
             .or(Some("".to_owned()))
             .unwrap();
 
-        format!("{}://{}{}{}{}", self.scheme, self.host, port_s, subdirs_s, params_s)
+        self.scheme.clone()
+            + "://"
+            + &subdomains_s
+            + &self.host
+            + &port_s
+            + &subdirs_s
+            + &params_s
     }
 }
 
@@ -97,12 +121,13 @@ impl UrlBuilder {
 mod tests {
     use super::*;
 
-    static HOST: &str = "api.google.com";
+    static HOST: &str = "google.com";
 
     #[test]
-    fn builder_normal_usage_returns_url() {
+    fn builder_normal_usage() {
         let actual = UrlBuilder::new()
-            .scheme("https")
+            .append_subdomain("api")
+            .append_subdomain("v2")
             .host(HOST)
             .port(400)
             .subdir("s1")
@@ -111,17 +136,26 @@ mod tests {
             .param("k2", "v2")
             .param("k3", "v4")
             .build();
-        let expected = format!("https://{}:400/s1/s2?k1=v1&k2=v2&k3=v4", HOST.to_owned());
+        let expected = format!("https://api.v2.{}:400/s1/s2?k1=v1&k2=v2&k3=v4", HOST.to_owned());
         assert_eq!(expected, actual);
     }
 
     #[test]
-    fn builder_only_url_returns_ok() {
+    fn builder_only_host_returns_ok() {
         let actual = UrlBuilder::new()
-            .scheme("https")
             .host(HOST)
             .build();
         let expected = format!("https://{}", HOST.to_owned());
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn builder_different_scheme_returns_ok() {
+        let actual = UrlBuilder::new()
+            .scheme("ssh")
+            .host(HOST)
+            .build();
+        let expected = format!("ssh://{}", HOST.to_owned());
         assert_eq!(expected, actual);
     }
 
