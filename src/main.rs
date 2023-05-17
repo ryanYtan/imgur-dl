@@ -1,7 +1,7 @@
 mod api;
 mod subhandlers;
-mod utility;
 mod models;
+mod mime2ext;
 use std::{error::Error, path::PathBuf};
 use std::io::Write;
 use structopt::StructOpt;

@@ -2,7 +2,7 @@ use std::{path::{PathBuf, Path}, io::Write, sync::Arc};
 use async_trait::async_trait;
 use struct_string_template::{Templater, TemplaterBuilder, Formatter};
 use tokio::task::JoinHandle;
-use crate::{api::ImgurApi, utility::mime2ext, models::{Image, Album}};
+use crate::{api::ImgurApi, models::{Image, Album}, mime2ext};
 use super::handler_traits::Handler;
 use anyhow::Result;
 
