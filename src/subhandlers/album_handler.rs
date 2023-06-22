@@ -2,7 +2,7 @@ use std::{path::{PathBuf, Path}, io::Write, sync::Arc};
 use async_trait::async_trait;
 use struct_string_template::{Templater, TemplaterBuilder, Formatter};
 use tokio::task::JoinHandle;
-use crate::{api::ImgurApi, models::{Image, Album}, mime2ext};
+use crate::{api::ImgurApi, models::{Image, Album}, mime2ext, utility::iter::exactly_one};
 use super::handler_traits::Handler;
 use anyhow::Result;
 
@@ -24,8 +24,14 @@ pub struct AlbumHandler;
 impl Handler for AlbumHandler {
     async fn handle(options: &crate::Opt) -> Result<()> {
         match &options.cmd {
-            crate::Command::Album { album_hashes, output_directory, output_template } => {
-                do_it(&album_hashes, output_directory, output_template).await
+            crate::Command::Album { album_hashes, output_directory, output_template, download, info } => {
+                do_it(
+                    &album_hashes,
+                    output_directory,
+                    output_template,
+                    *download,
+                    *info
+                ).await
             },
         }
     }
@@ -38,11 +44,26 @@ fn get_output_filename(image: &Image, counter: u64) -> String {
 async fn do_it(
         album_hashes: &[String],
         output_directory: &Option<PathBuf>,
-        output_template: &str
+        output_template: &str,
+        download: bool,
+        info: bool,
+) -> Result<()> {
+    assert!(exactly_one(&[download, info]));
+    if download {
+        handle_download(output_directory, output_template, album_hashes).await
+    } else {
+        handle_info(output_template, album_hashes).await
+    }
+}
+
+async fn handle_download(
+        output_directory: &Option<PathBuf>,
+        output_template: &str,
+        album_hashes: &[String]
 ) -> Result<()> {
     let api = Arc::new(ImgurApi::new());
-    let formatter = Formatter::build(output_template)?;
     let templater = create_template();
+    let formatter = Formatter::build(output_template)?;
     let outdir = output_directory
         .clone()
         .or(Some(Path::new("./").to_path_buf()))
@@ -82,6 +103,21 @@ async fn do_it(
             })
             .collect();
         futures::future::join_all(tasks).await;
+    }
+    Ok(())
+}
+
+async fn handle_info(
+        output_template: &str,
+        album_hashes: &[String]
+) -> Result<()> {
+    let api = Arc::new(ImgurApi::new());
+    let templater = create_template();
+    let formatter = Formatter::build(output_template)?;
+    for hash in album_hashes {
+        let album = api.album(&hash).await?;
+        let sout = templater.renderf(&album.data, &formatter)?;
+        println!("{}", &sout);
     }
     Ok(())
 }

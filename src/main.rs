@@ -2,9 +2,11 @@ mod api;
 mod subhandlers;
 mod models;
 mod mime2ext;
+mod utility;
 use std::{error::Error, path::PathBuf};
 use std::io::Write;
 use structopt::StructOpt;
+use structopt::clap::ArgGroup;
 use subhandlers::handler_traits::Handler;
 
 #[derive(StructOpt)]
@@ -12,14 +14,13 @@ use subhandlers::handler_traits::Handler;
 pub struct Opt {
     #[structopt(short, long, parse(from_occurrences))]
     verbose: u64,
-
     #[structopt(subcommand)]
     cmd: Command,
 }
 
 #[derive(StructOpt)]
 pub enum Command {
-    #[structopt(about = "album")]
+    #[structopt(about = "album", group = ArgGroup::with_name("op").required(true))]
     Album {
         #[structopt(required = true, min_values = 1)]
         album_hashes: Vec<String>,
@@ -27,6 +28,10 @@ pub enum Command {
         output_directory: Option<PathBuf>,
         #[structopt(short = "-t", long, default_value = "[%(id)] %(title)")]
         output_template: String,
+        #[structopt(short = "-d", long, group = "op")]
+        download: bool,
+        #[structopt(short = "-i", long, group = "op")]
+        info: bool,
     }
 }
 
