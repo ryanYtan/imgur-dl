@@ -36,6 +36,8 @@ pub enum Command {
     Upload {
     },
     Config {
+        #[structopt(short = "-o", long, default_value="~/.config", parse(from_os_str))]
+        output_directory: PathBuf,
     },
 }
 
