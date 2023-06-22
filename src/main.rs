@@ -32,7 +32,11 @@ pub enum Command {
         download: bool,
         #[structopt(short = "-i", long, group = "op")]
         info: bool,
-    }
+    },
+    Upload {
+    },
+    Config {
+    },
 }
 
 #[tokio::main]
@@ -62,6 +66,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let r = match &opt.cmd {
         Command::Album { .. } => subhandlers::album_handler::AlbumHandler::handle(&opt).await,
+        Command::Upload { .. } => subhandlers::upload_handler::UploadHandler::handle(&opt).await,
+        Command::Config { .. } => subhandlers::config_handler::ConfigHandler::handle(&opt).await,
     };
 
     match r {

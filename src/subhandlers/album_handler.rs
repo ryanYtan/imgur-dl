@@ -33,6 +33,7 @@ impl Handler for AlbumHandler {
                     *info
                 ).await
             },
+            _ => panic!("unreachable"),
         }
     }
 }
