@@ -2,11 +2,9 @@ mod api;
 mod subhandlers;
 mod models;
 mod mime2ext;
-mod utility;
 use std::{error::Error, path::PathBuf};
 use std::io::Write;
 use structopt::StructOpt;
-use structopt::clap::ArgGroup;
 use subhandlers::handler_traits::Handler;
 
 #[derive(StructOpt)]
@@ -19,25 +17,39 @@ pub struct Opt {
 }
 
 #[derive(StructOpt)]
+pub struct AlbumDownloadOptions {
+    #[structopt(required = true, min_values = 1)]
+    album_hashes: Vec<String>,
+    #[structopt(short = "-o", long, parse(from_os_str))]
+    output_directory: Option<PathBuf>,
+    #[structopt(short = "-t", long, default_value = "[%(id)] %(title)")]
+    output_template: String,
+}
+
+#[derive(StructOpt)]
+pub struct AlbumInfoOptions {
+    album_hash: String,
+    #[structopt(short = "-t", long, default_value = "[%(id)] %(title)")]
+    output_template: String,
+}
+
+#[derive(StructOpt)]
+pub enum AlbumCommand {
+    #[structopt(help = "Download an album")]
+    Download(AlbumDownloadOptions),
+    #[structopt(help = "List information for an album")]
+    Info(AlbumInfoOptions),
+}
+
+#[derive(StructOpt)]
 pub enum Command {
-    #[structopt(about = "album", group = ArgGroup::with_name("op").required(true))]
-    Album {
-        #[structopt(required = true, min_values = 1)]
-        album_hashes: Vec<String>,
-        #[structopt(short = "-o", long, parse(from_os_str))]
-        output_directory: Option<PathBuf>,
-        #[structopt(short = "-t", long, default_value = "[%(id)] %(title)")]
-        output_template: String,
-        #[structopt(short = "-d", long, group = "op")]
-        download: bool,
-        #[structopt(short = "-i", long, group = "op")]
-        info: bool,
-    },
+    #[structopt(about = "album")]
+    Album(AlbumCommand),
     Upload {
+        #[structopt(short = "-a", long)]
+        api_key: String,
     },
     Config {
-        #[structopt(short = "-o", long, default_value="~/.config", parse(from_os_str))]
-        output_directory: PathBuf,
     },
 }
 

@@ -5,7 +5,7 @@ use thiserror::Error;
 use tokio_retry::{strategy::{jitter, ExponentialBackoff}, Retry};
 use lazy_static::lazy_static;
 use url_constructor::UrlConstructor;
-use crate::{models::{ResponseBody, Album, Image}};
+use crate::models::{ResponseBody, Album, Image, Gallery};
 use anyhow::{Result, anyhow};
 
 #[derive(Debug, Error)]
@@ -83,6 +83,18 @@ impl ImgurApi {
             .host(&self.base_url)
             .subdir("album")
             .subdir(album_hash)
+            .build();
+        let result = self.get_header(&url, &IMGUR_AUTHORIZATION_HEADER).await?;
+        Ok(serde_json::from_slice(&result).unwrap())
+    }
+
+    // https://api.imgur.com/3/album/{{album_hash}}
+    pub async fn gallery(&self, gallery_hash: &str) -> Result<ResponseBody<Gallery>> {
+        let url = UrlConstructor::new()
+            .scheme("https")
+            .host(&self.base_url)
+            .subdir("gallery")
+            .subdir(gallery_hash)
             .build();
         let result = self.get_header(&url, &IMGUR_AUTHORIZATION_HEADER).await?;
         Ok(serde_json::from_slice(&result).unwrap())
